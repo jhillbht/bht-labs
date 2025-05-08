@@ -1,0 +1,22 @@
+name: bht-labs-mcp-server
+region: nyc
+services:
+- name: mcp-server
+  github:
+    repo: jhillbht/bht-labs
+    branch: main
+    deploy_on_push: true
+  source_dir: /
+  dockerfile_path: Dockerfile
+  http_port: 8080
+  health_check:
+    http_path: /health
+  envs:
+  - key: MCP_AUTH_KEY
+    value: ea7b0fb144dfee03c8e76cfd41bc8b49
+    scope: RUN_AND_BUILD_TIME
+  - key: MCP_DATA_DIR
+    value: /app/data
+    scope: RUN_AND_BUILD_TIME
+  routes:
+  - path: /
