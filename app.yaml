@@ -2,10 +2,6 @@ name: bht-labs-mcp-server
 region: nyc
 services:
 - name: mcp-server
-  github:
-    repo: bht-labs/bht-labs-mcp-server
-    branch: main
-    deploy_on_push: true
   source_dir: /
   dockerfile_path: Dockerfile
   http_port: 8080
@@ -17,6 +13,15 @@ services:
     scope: RUN_AND_BUILD_TIME
   - key: MCP_DATA_DIR
     value: /app/data
+    scope: RUN_AND_BUILD_TIME
+  - key: GRAPHLIT_ORGANIZATION_ID
+    value: 3e122b27-4534-4893-aadd-5d5cb83337f7
+    scope: RUN_AND_BUILD_TIME
+  - key: GRAPHLIT_ENVIRONMENT_ID
+    value: a2959835-fd03-4653-9395-ac921421c93f
+    scope: RUN_AND_BUILD_TIME
+  - key: GRAPHLIT_JWT_SECRET
+    value: your_jwt_secret_here
     scope: RUN_AND_BUILD_TIME
   routes:
   - path: /
