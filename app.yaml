@@ -1,4 +1,4 @@
-name: bht-labs-mcp-server
+name: bht-labs-mcp-server-2
 region: nyc
 services:
 - name: mcp-server
