@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { createHttpSseHandler, FastMCP } = require('@modelcontextprotocol/server');
 const { withFileSystem } = require('@modelcontextprotocol/server-filesystem');
+const { withKnowledgeGraph } = require('@modelcontextprotocol/server-knowledge-graph');
 const fs = require('fs');
 const path = require('path');
 
@@ -21,11 +22,23 @@ if (!fs.existsSync(DATA_DIR)) {
     path.join(docsDir, 'sample.txt'),
     'This is a sample document created by the BHT Labs MCP Server.'
   );
+  
+  // Create knowledge graph data directory
+  const kgDir = path.join(DATA_DIR, 'knowledge_graph');
+  fs.mkdirSync(kgDir, { recursive: true });
 }
 
-// Create MCP server with filesystem capabilities
+// Create MCP server with filesystem and knowledge graph capabilities
 const mcp = new FastMCP('BHT Labs MCP Server');
 withFileSystem(mcp, { path: DATA_DIR });
+
+// Initialize Knowledge Graph with persistent storage
+const kgStoragePath = path.join(DATA_DIR, 'knowledge_graph', 'kg_data.json');
+withKnowledgeGraph(mcp, { 
+  persistPath: kgStoragePath,
+  // Load existing graph data if available
+  initialGraph: fs.existsSync(kgStoragePath) ? JSON.parse(fs.readFileSync(kgStoragePath, 'utf8')) : undefined
+});
 
 // Add authentication middleware
 const authenticate = (req, res, next) => {
@@ -64,7 +77,8 @@ app.get('/info', (req, res) => {
     description: 'An MCP server compatible with Anthropic Claude',
     anthropicCompatible: true,
     capabilities: {
-      filesystem: true
+      filesystem: true,
+      knowledgeGraph: true
     }
   });
 });
@@ -77,5 +91,7 @@ app.use('/mcp', authenticate, (req, res) => mcpHandler(req, res));
 app.listen(PORT, () => {
   console.log(`MCP Server listening on port ${PORT}`);
   console.log(`Filesystem path: ${DATA_DIR}`);
+  console.log(`Knowledge Graph storage: ${kgStoragePath}`);
   console.log(`Authentication: ${AUTH_KEY ? 'Enabled' : 'Disabled'}`);
+  console.log(`Available tools: ${mcp.listTools().map(tool => tool.name).join(', ')}`);
 });
