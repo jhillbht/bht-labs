@@ -1,0 +1,59 @@
+# Node.js dependencies
+node_modules/
+
+# Environment variables
+.env
+
+# Data directory
+data/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Directory for instrumented libs
+lib-cov/
+
+# Coverage directory
+coverage/
+
+# Dependency directories
+.npm/
+.eslintcache
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# dotenv environment variable files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Mac files
+.DS_Store
+
+# Docker files
+.dockerignore
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo

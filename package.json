@@ -1,0 +1,15 @@
+{
+  "name": "bht-labs-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP Server compatible with Anthropic Claude",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "^1.6.0",
+    "@modelcontextprotocol/server-filesystem": "^1.6.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  }
+}
