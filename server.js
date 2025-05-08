@@ -69,20 +69,6 @@ app.get('/info', (req, res) => {
   });
 });
 
-// Add root endpoint for App Platform checks
-app.get('/', (req, res) => {
-  res.status(200).json({
-    name: 'BHT Labs MCP Server',
-    status: 'running',
-    endpoints: {
-      '/': 'Root endpoint (this response)',
-      '/health': 'Health check endpoint',
-      '/info': 'Server information',
-      '/mcp': 'MCP protocol endpoint (requires authentication)'
-    }
-  });
-});
-
 // Create MCP handler with authentication
 const mcpHandler = createHttpSseHandler(mcp);
 app.use('/mcp', authenticate, (req, res) => mcpHandler(req, res));
