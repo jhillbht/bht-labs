@@ -3,7 +3,7 @@ region: nyc
 services:
 - name: mcp-server
   github:
-    repo: bht-labs-mcp-server
+    repo: bht-labs/bht-labs-mcp-server
     branch: main
     deploy_on_push: true
   source_dir: /
