@@ -1,3 +1,4 @@
+// This is a basic Node.js server that implements the Model Context Protocol (MCP)
 const express = require('express');
 const cors = require('cors');
 const { createHttpSseHandler, FastMCP } = require('@modelcontextprotocol/server');

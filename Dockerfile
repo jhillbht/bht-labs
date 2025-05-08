@@ -1,3 +1,4 @@
+# Dockerfile for BHT Labs MCP Server
 FROM node:18-alpine
 
 WORKDIR /app
