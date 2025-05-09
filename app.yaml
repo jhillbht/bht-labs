@@ -1,10 +1,11 @@
-name: bht-labs-mcp-server
+name: bht-labs-mcp-server-simple
 region: nyc
 services:
 - name: mcp-server
   source_dir: /
   dockerfile_path: Dockerfile
   http_port: 8080
+  instance_size_slug: basic-xs
   health_check:
     http_path: /health
   envs:
