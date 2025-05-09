@@ -1,18 +1,17 @@
-FROM node:20.10-alpine
+FROM node:18-alpine
 
 WORKDIR /app
 
-# Install system dependencies required for process management
+# Install system dependencies
 RUN apk add --no-cache procps curl
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies with more verbose output for debugging
-RUN npm install --production --no-optional --loglevel verbose && \
-    npm cache clean --force
+# Simple, reliable npm install
+RUN npm install --production
 
-# Create data directory and set permissions
+# Create data directory
 RUN mkdir -p /app/data /app/data/knowledge_graph
 
 # Copy application code
