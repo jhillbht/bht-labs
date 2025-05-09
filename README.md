@@ -66,7 +66,7 @@ fly secrets set MCP_AUTH_KEY="$AUTH_KEY"
 
 1. Go to [Claude settings](https://claude.ai/settings/profile)
 2. In the "Integrations" section, click "Add more"
-3. Add your MCP server URL: `https://your-app-name.fly.dev/mcp`
+3. Add your MCP server URL: `https://bht-labs-remote-mcp.fly.dev/mcp`
 4. If authentication is enabled, provide the authentication key when prompted
 
 ## Available MCP Tools
