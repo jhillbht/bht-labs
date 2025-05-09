@@ -18,7 +18,8 @@
     "helmet": "^7.1.0",
     "fs-extra": "^11.2.0",
     "tree-kill": "^1.2.2",
-    "ps-list": "^8.1.1"
+    "ps-list": "^8.1.1",
+    "http": "^0.0.1-security"
   },
   "engines": {
     "node": ">=20.0.0"
