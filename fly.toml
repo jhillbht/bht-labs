@@ -33,3 +33,11 @@ primary_region = "dfw"
 
 [http_service.http_options]
   compress = true
+  
+  # Extended timeout for long-lived MCP connections
+  response_timeout = "60m"
+  read_timeout = "60m"
+  
+  # Enable keepalive for persistent connections
+  keepalive_timeout = "30s"
+  keepalive_max_connections = 1000
