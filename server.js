@@ -4,6 +4,8 @@ const { createHttpSseHandler, FastMCP } = require('@modelcontextprotocol/server'
 const { withFileSystem } = require('@modelcontextprotocol/server-filesystem');
 const { withKnowledgeGraph } = require('@modelcontextprotocol/server-knowledge-graph');
 const { spawn } = require('child_process');
+const http = require('http');
+const httpProxy = require('http-proxy');
 const fs = require('fs');
 const path = require('path');
 
@@ -14,6 +16,7 @@ const DATA_DIR = process.env.MCP_DATA_DIR || './data';
 const GRAPHLIT_ORG_ID = process.env.GRAPHLIT_ORGANIZATION_ID;
 const GRAPHLIT_ENV_ID = process.env.GRAPHLIT_ENVIRONMENT_ID;
 const GRAPHLIT_JWT_SECRET = process.env.GRAPHLIT_JWT_SECRET;
+const GRAPHLIT_PORT = 3000; // Default port for Graphlit MCP server
 
 // Create data directory if it doesn't exist
 if (!fs.existsSync(DATA_DIR)) {
@@ -44,46 +47,15 @@ withKnowledgeGraph(mcp, {
   initialGraph: fs.existsSync(kgStoragePath) ? JSON.parse(fs.readFileSync(kgStoragePath, 'utf8')) : undefined
 });
 
-// Start Graphlit MCP Server if credentials are available
-let graphlitProcess = null;
-if (GRAPHLIT_ORG_ID && GRAPHLIT_ENV_ID && GRAPHLIT_JWT_SECRET) {
-  console.log('Starting Graphlit MCP Server...');
-  
-  graphlitProcess = spawn('npx', ['-y', 'graphlit-mcp-server'], {
-    env: {
-      ...process.env,
-      GRAPHLIT_ORGANIZATION_ID: GRAPHLIT_ORG_ID,
-      GRAPHLIT_ENVIRONMENT_ID: GRAPHLIT_ENV_ID,
-      GRAPHLIT_JWT_SECRET: GRAPHLIT_JWT_SECRET
-    },
-    stdio: ['ignore', 'pipe', 'pipe']
-  });
-  
-  // Log output from Graphlit MCP Server
-  graphlitProcess.stdout.on('data', (data) => {
-    console.log(`Graphlit: ${data}`);
-  });
-  
-  graphlitProcess.stderr.on('data', (data) => {
-    console.error(`Graphlit Error: ${data}`);
-  });
-  
-  graphlitProcess.on('exit', (code) => {
-    console.log(`Graphlit process exited with code ${code}`);
-    graphlitProcess = null;
-  });
-  
-  // Handle graceful shutdown
-  process.on('SIGTERM', () => {
-    if (graphlitProcess) {
-      console.log('Terminating Graphlit process...');
-      graphlitProcess.kill();
-    }
-    process.exit(0);
-  });
-  
-  console.log('Graphlit MCP Server started');
-}
+// Create Express app
+const app = express();
+
+// Add CORS middleware with appropriate settings
+app.use(cors({
+  origin: '*', // Allow all origins
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-MCP-Auth']
+}));
 
 // Add authentication middleware
 const authenticate = (req, res, next) => {
@@ -99,22 +71,102 @@ const authenticate = (req, res, next) => {
   next();
 };
 
-// Create Express app
-const app = express();
+// Start Graphlit MCP Server if credentials are available
+let graphlitProcess = null;
+let graphlitReady = false;
 
-// Add CORS middleware with appropriate settings
-app.use(cors({
-  origin: '*', // Allow all origins
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-MCP-Auth']
-}));
+if (GRAPHLIT_ORG_ID && GRAPHLIT_ENV_ID && GRAPHLIT_JWT_SECRET) {
+  console.log('Starting Graphlit MCP Server...');
+  
+  // Set up proxy for Graphlit MCP Server
+  const proxy = httpProxy.createProxyServer();
+  
+  // Handle proxy errors
+  proxy.on('error', (err, req, res) => {
+    console.error('Proxy error:', err);
+    res.writeHead(500, {
+      'Content-Type': 'text/plain'
+    });
+    res.end('Proxy error connecting to Graphlit MCP Server');
+  });
+  
+  // Start Graphlit MCP Server process
+  graphlitProcess = spawn('npx', ['-y', 'graphlit-mcp-server'], {
+    env: {
+      ...process.env,
+      GRAPHLIT_ORGANIZATION_ID: GRAPHLIT_ORG_ID,
+      GRAPHLIT_ENVIRONMENT_ID: GRAPHLIT_ENV_ID,
+      GRAPHLIT_JWT_SECRET: GRAPHLIT_JWT_SECRET,
+      PORT: GRAPHLIT_PORT
+    },
+    stdio: ['ignore', 'pipe', 'pipe']
+  });
+  
+  // Log output from Graphlit MCP Server
+  graphlitProcess.stdout.on('data', (data) => {
+    const output = data.toString();
+    console.log(`Graphlit: ${output}`);
+    
+    // Check if server is ready
+    if (output.includes('Server listening')) {
+      graphlitReady = true;
+      console.log('Graphlit MCP Server is ready');
+    }
+  });
+  
+  graphlitProcess.stderr.on('data', (data) => {
+    console.error(`Graphlit Error: ${data}`);
+  });
+  
+  graphlitProcess.on('exit', (code) => {
+    console.log(`Graphlit process exited with code ${code}`);
+    graphlitProcess = null;
+    graphlitReady = false;
+  });
+  
+  // Set up proxy route for Graphlit MCP
+  app.all('/graphlit-mcp*', authenticate, (req, res) => {
+    if (!graphlitReady) {
+      return res.status(503).json({ error: 'Graphlit MCP Server is not ready yet' });
+    }
+    
+    // Remove /graphlit-mcp prefix for proxying
+    req.url = req.url.replace(/^\/graphlit-mcp/, '');
+    
+    // Forward the request to Graphlit MCP Server
+    proxy.web(req, res, { target: `http://localhost:${GRAPHLIT_PORT}` });
+  });
+  
+  // Handle graceful shutdown
+  process.on('SIGTERM', () => {
+    if (graphlitProcess) {
+      console.log('Terminating Graphlit process...');
+      graphlitProcess.kill();
+    }
+    process.exit(0);
+  });
+  
+  console.log('Graphlit MCP Server integration initialized');
+  
+  // Wait for Graphlit server to be ready
+  const waitForGraphlit = () => {
+    if (!graphlitReady) {
+      console.log('Waiting for Graphlit MCP Server to be ready...');
+      setTimeout(waitForGraphlit, 2000);
+    } else {
+      console.log('Graphlit MCP Server is ready to receive requests');
+    }
+  };
+  
+  waitForGraphlit();
+}
 
 // Add health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'ok', 
     message: 'BHT Labs MCP Server is running',
-    graphlit: graphlitProcess ? 'running' : 'not running' 
+    graphlit: graphlitReady ? 'ready' : 'not ready' 
   });
 });
 
@@ -128,8 +180,41 @@ app.get('/info', (req, res) => {
     capabilities: {
       filesystem: true,
       knowledgeGraph: true,
-      graphlit: graphlitProcess ? true : false
+      graphlit: graphlitReady
     }
+  });
+});
+
+// Add tools endpoint to list available tools
+app.get('/tools', authenticate, (req, res) => {
+  const mcpTools = mcp.listTools().map(tool => ({
+    name: tool.name,
+    description: tool.description,
+    type: 'core'
+  }));
+  
+  const graphlitTools = graphlitReady ? [
+    { name: 'retrieveSources', description: 'Retrieve sources from Graphlit', type: 'graphlit' },
+    { name: 'visuallyDescribeImage', description: 'Visually describe images', type: 'graphlit' },
+    { name: 'ingestFile', description: 'Ingest files (PDFs, DOCX, PPTX, etc.)', type: 'graphlit' },
+    { name: 'ingestWebPage', description: 'Ingest web pages', type: 'graphlit' },
+    { name: 'ingestText', description: 'Ingest text content', type: 'graphlit' },
+    { name: 'webCrawl', description: 'Crawl websites', type: 'graphlit' },
+    { name: 'webSearch', description: 'Perform web searches', type: 'graphlit' },
+    { name: 'webMap', description: 'Map website structures', type: 'graphlit' },
+    { name: 'screenshotPage', description: 'Capture website screenshots', type: 'graphlit' },
+    { name: 'createCollection', description: 'Create collections of content', type: 'graphlit' },
+    { name: 'addContentsToCollection', description: 'Add content to collections', type: 'graphlit' },
+    { name: 'removeContentsFromCollection', description: 'Remove content from collections', type: 'graphlit' },
+    { name: 'deleteCollection', description: 'Delete collections', type: 'graphlit' },
+    { name: 'deleteFeed', description: 'Delete data feeds', type: 'graphlit' },
+    { name: 'deleteContent', description: 'Delete content', type: 'graphlit' },
+    { name: 'isFeedDone', description: 'Check if a feed is done', type: 'graphlit' },
+    { name: 'isContentDone', description: 'Check if content processing is done', type: 'graphlit' }
+  ] : [];
+  
+  res.status(200).json({
+    tools: [...mcpTools, ...graphlitTools]
   });
 });
 
@@ -137,21 +222,12 @@ app.get('/info', (req, res) => {
 const mcpHandler = createHttpSseHandler(mcp);
 app.use('/mcp', authenticate, (req, res) => mcpHandler(req, res));
 
-// Proxy requests to Graphlit MCP Server if running
-if (graphlitProcess) {
-  app.use('/graphlit-mcp', authenticate, (req, res) => {
-    // Implementation would need a proper proxy setup 
-    // This is a placeholder for the actual proxy implementation
-    res.status(200).json({ status: 'ok', message: 'Graphlit MCP endpoint' });
-  });
-}
-
 // Start the server
 app.listen(PORT, () => {
   console.log(`MCP Server listening on port ${PORT}`);
   console.log(`Filesystem path: ${DATA_DIR}`);
   console.log(`Knowledge Graph storage: ${kgStoragePath}`);
   console.log(`Authentication: ${AUTH_KEY ? 'Enabled' : 'Disabled'}`);
-  console.log(`Graphlit integration: ${graphlitProcess ? 'Enabled' : 'Disabled'}`);
-  console.log(`Available tools: ${mcp.listTools().map(tool => tool.name).join(', ')}`);
+  console.log(`Graphlit integration: ${graphlitProcess ? 'Initializing' : 'Disabled'}`);
+  console.log(`Available MCP tools: ${mcp.listTools().map(tool => tool.name).join(', ')}`);
 });
