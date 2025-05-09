@@ -32,9 +32,9 @@ if ! flyctl auth whoami &> /dev/null; then
 fi
 
 # Check if the app exists
-if ! flyctl apps list | grep -q "bht-labs-mcp-server"; then
+if ! flyctl apps list | grep -q "bht-labs-remote-mcp"; then
     echo "Creating application..."
-    flyctl apps create bht-labs-mcp-server
+    flyctl apps create bht-labs-remote-mcp
 fi
 
 # Check if volume exists
@@ -84,4 +84,4 @@ echo
 echo "To view logs:"
 echo "  flyctl logs"
 echo
-echo "Visit the Fly.io dashboard: https://fly.io/apps/bht-labs-mcp-server"
+echo "Visit the Fly.io dashboard: https://fly.io/apps/bht-labs-remote-mcp"
