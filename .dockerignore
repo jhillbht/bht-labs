@@ -1,0 +1,35 @@
+# Git
+.git
+.gitignore
+
+# Node
+node_modules
+npm-debug.log
+
+# Build artifacts
+.npm
+.yarn
+.cache
+
+# App artifacts
+data/*
+!data/.gitkeep
+
+# Logs
+logs
+*.log
+
+# Development configurations
+.editorconfig
+.eslintrc
+.prettierrc
+*.md
+!README.md
+
+# Docker
+.dockerignore
+Dockerfile*
+
+# Fly.io
+fly.toml
+.fly
