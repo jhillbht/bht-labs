@@ -1,72 +1,131 @@
 # BHT Labs MCP Server
 
-This is a Model Context Protocol (MCP) server implementation designed to work with Anthropic Claude and other MCP-compatible AI systems. It provides file system access capabilities through a standard MCP interface.
+A Model Context Protocol (MCP) server compatible with Anthropic Claude, optimized for deployment on Fly.io.
 
 ## Features
 
-- Complete MCP protocol implementation
-- File system access through MCP tools
-- Authentication for secure access
-- CORS support for cross-origin requests
-- Health check endpoint for monitoring
-- Detailed server information endpoint
+- **SSE Transport**: Uses Server-Sent Events (SSE) transport for Fly.io compatibility
+- **File System Access**: Browse and manage files securely
+- **Knowledge Graph**: Store and retrieve structured information
+- **Process Management**: List and manage system processes
+- **Command Execution**: Run commands with security safeguards
 
-## Deployment
+## Deployment Instructions
 
-This server is designed to be deployed to DigitalOcean App Platform. The repository includes:
+### Fly.io Deployment
 
-- `server.js`: The main server implementation
-- `package.json`: Node.js dependencies
-- `Dockerfile`: Container configuration for deployment
+1. Install the Fly.io CLI:
+   ```bash
+   curl -L https://fly.io/install.sh | sh
+   ```
+
+2. Login to Fly.io:
+   ```bash
+   fly auth login
+   ```
+
+3. Deploy the application:
+   ```bash
+   fly launch
+   ```
+   Or for an existing app:
+   ```bash
+   fly deploy
+   ```
+
+4. Create a persistent volume:
+   ```bash
+   fly volumes create bht_labs_data --size 1 --region dfw
+   ```
+
+5. Set environment variables (if needed):
+   ```bash
+   fly secrets set MCP_AUTH_KEY=your_auth_key
+   ```
+
+6. Monitor your app:
+   ```bash
+   fly status
+   fly logs
+   ```
+
+### Local Development
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/jhillbht/bht-labs.git
+   cd bht-labs
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Run locally:
+   ```bash
+   npm start
+   ```
+
+## Using with Claude Desktop
+
+Add to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "bht-labs": {
+      "sse": {
+        "url": "https://your-app-name.fly.dev/mcp",
+        "messageEndpoint": "https://your-app-name.fly.dev/mcp"
+      }
+    }
+  }
+}
+```
+
+If authentication is enabled:
+
+```json
+{
+  "mcpServers": {
+    "bht-labs": {
+      "sse": {
+        "url": "https://your-app-name.fly.dev/mcp",
+        "messageEndpoint": "https://your-app-name.fly.dev/mcp",
+        "headers": {
+          "Authorization": "Bearer your_auth_key"
+        }
+      }
+    }
+  }
+}
+```
+
+## API Endpoints
+
+- `GET /health` - Health check endpoint
+- `GET /` - Server information
+- `GET /tools` - List all available tools
+- `/mcp` - MCP protocol endpoint for SSE communication
 
 ## Environment Variables
 
-- `PORT`: The port to run the server on (set automatically by App Platform)
-- `MCP_AUTH_KEY`: Authentication key for securing access to the MCP server
-- `MCP_DATA_DIR`: Directory for storing files (default: `/app/data`)
+- `PORT` - Server port (default: 8080)
+- `MCP_AUTH_KEY` - Optional authentication key
+- `MCP_DATA_DIR` - Data directory path (default: './data')
 
-## Endpoints
+## Available Tools
 
-- `/`: Root endpoint with basic server information
-- `/health`: Health check endpoint
-- `/info`: Detailed server information
-- `/mcp`: MCP protocol endpoint (requires authentication)
+- `file_*` - Filesystem operations
+- `knowledge_graph_*` - Knowledge graph operations
+- `execute_command` - Execute terminal commands
+- `list_processes` - List system processes
+- `kill_process` - Terminate a process
 
-## Authentication
+## Security
 
-The server implements Bearer token authentication. To access the MCP endpoint, include an `Authorization` header:
-
-```
-Authorization: Bearer YOUR_AUTH_KEY
-```
-
-or
-
-```
-X-MCP-Auth: Bearer YOUR_AUTH_KEY
-```
-
-## How It Works
-
-1. The server creates an Express application
-2. CORS middleware is added for cross-origin access
-3. Authentication middleware is applied to the MCP endpoint
-4. The MCP server is initialized with file system capabilities
-5. The server listens on the configured port
-
-## For Development
-
-```bash
-npm install
-MCP_AUTH_KEY=your_auth_key node server.js
-```
-
-## For Anthropic Claude Integration
-
-This server meets all of Anthropic's requirements for remote MCP servers:
-
-1. HTTPS with a valid certificate (provided by App Platform)
-2. Authentication via Bearer token
-3. Correct implementation of the MCP protocol
-
-For more information, see [Anthropic's documentation on custom integrations using remote MCP](https://support.anthropic.com/en/articles/11175166-about-custom-integrations-using-remote-mcp).
+- Command blacklisting
+- Authentication support
+- Volume isolation
+- Process sandboxing

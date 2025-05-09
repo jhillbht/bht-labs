@@ -1,0 +1,35 @@
+app = "bht-labs-mcp-server"
+primary_region = "dfw"
+
+[build]
+  [build.args]
+    NODE_ENV = "production"
+
+[env]
+  MCP_DATA_DIR = "/app/data"
+  PORT = "8080"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+  
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 1000
+    soft_limit = 500
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[mounts]
+  source = "bht_labs_data"
+  destination = "/app/data"
+
+[http_service.http_options]
+  compress = true
