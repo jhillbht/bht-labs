@@ -5,7 +5,7 @@ services:
   source_dir: /
   dockerfile_path: Dockerfile
   http_port: 8080
-  instance_size_slug: basic-xs
+  instance_size_slug: basic-s
   health_check:
     http_path: /health
   envs:
@@ -23,6 +23,9 @@ services:
     scope: RUN_AND_BUILD_TIME
   - key: GRAPHLIT_JWT_SECRET
     value: "RizYP09Mn+tsnXUSLCrX+6g4nmVhF/tRK5Wch0JesGg="
+    scope: RUN_AND_BUILD_TIME
+  - key: NODE_OPTIONS
+    value: "--max-old-space-size=2048"
     scope: RUN_AND_BUILD_TIME
   routes:
   - path: /
