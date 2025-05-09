@@ -3,7 +3,6 @@ const cors = require('cors');
 const { createHttpSseHandler, FastMCP } = require('@modelcontextprotocol/server');
 const { withFileSystem } = require('@modelcontextprotocol/server-filesystem');
 const { withKnowledgeGraph } = require('@modelcontextprotocol/server-knowledge-graph');
-const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
@@ -11,9 +10,6 @@ const path = require('path');
 const PORT = process.env.PORT || 8080;  // App Platform sets PORT env var
 const AUTH_KEY = process.env.MCP_AUTH_KEY;
 const DATA_DIR = process.env.MCP_DATA_DIR || './data';
-const GRAPHLIT_ORG_ID = process.env.GRAPHLIT_ORGANIZATION_ID;
-const GRAPHLIT_ENV_ID = process.env.GRAPHLIT_ENVIRONMENT_ID;
-const GRAPHLIT_JWT_SECRET = process.env.GRAPHLIT_JWT_SECRET;
 
 // Create data directory if it doesn't exist
 if (!fs.existsSync(DATA_DIR)) {
@@ -68,18 +64,11 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-MCP-Auth']
 }));
 
-// Check if Graphlit credentials are available
-const graphlitCredentialsAvailable = Boolean(GRAPHLIT_ORG_ID && GRAPHLIT_ENV_ID && GRAPHLIT_JWT_SECRET);
-
 // Add health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'ok', 
-    message: 'BHT Labs MCP Server is running',
-    graphlit: {
-      credentialsAvailable: graphlitCredentialsAvailable,
-      status: 'idle'
-    }
+    message: 'BHT Labs MCP Server is running'
   });
 });
 
@@ -92,11 +81,7 @@ app.get('/info', (req, res) => {
     anthropicCompatible: true,
     capabilities: {
       filesystem: true,
-      knowledgeGraph: true,
-      graphlit: {
-        available: graphlitCredentialsAvailable,
-        active: false
-      }
+      knowledgeGraph: true
     }
   });
 });
@@ -109,20 +94,8 @@ app.get('/tools', authenticate, (req, res) => {
     type: 'core'
   }));
   
-  // Define Graphlit tools (these will be available once Graphlit is fully integrated)
-  const graphlitTools = graphlitCredentialsAvailable ? [
-    { name: 'retrieveSources', description: 'Retrieve sources from Graphlit', type: 'graphlit', status: 'pending' },
-    { name: 'visuallyDescribeImage', description: 'Visually describe images', type: 'graphlit', status: 'pending' },
-    { name: 'ingestFile', description: 'Ingest files (PDFs, DOCX, PPTX, etc.)', type: 'graphlit', status: 'pending' },
-    { name: 'ingestWebPage', description: 'Ingest web pages', type: 'graphlit', status: 'pending' },
-    { name: 'ingestText', description: 'Ingest text content', type: 'graphlit', status: 'pending' },
-    { name: 'webCrawl', description: 'Crawl websites', type: 'graphlit', status: 'pending' },
-    { name: 'webSearch', description: 'Perform web searches', type: 'graphlit', status: 'pending' },
-    { name: 'webMap', description: 'Map website structures', type: 'graphlit', status: 'pending' }
-  ] : [];
-  
   res.status(200).json({
-    tools: [...coreTools, ...graphlitTools]
+    tools: coreTools
   });
 });
 
@@ -136,6 +109,5 @@ app.listen(PORT, () => {
   console.log(`Filesystem path: ${DATA_DIR}`);
   console.log(`Knowledge Graph storage: ${kgStoragePath}`);
   console.log(`Authentication: ${AUTH_KEY ? 'Enabled' : 'Disabled'}`);
-  console.log(`Graphlit credentials available: ${graphlitCredentialsAvailable}`);
   console.log(`Available tools: ${mcp.listTools().map(tool => tool.name).join(', ')}`);
 });
