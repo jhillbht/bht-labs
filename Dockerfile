@@ -1,14 +1,14 @@
-FROM node:18-alpine
+FROM node:16-alpine
 
 WORKDIR /app
 
 # Install system dependencies
 RUN apk add --no-cache procps curl
 
-# Copy package files
+# Copy package files first for better caching
 COPY package*.json ./
 
-# Simple, reliable npm install
+# Install dependencies
 RUN npm install --production
 
 # Create data directory
@@ -29,5 +29,5 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8080/health || exit 1
 
-# Set proper command
-CMD ["node", "server.js"]
+# Set proper command (use minimal server for reliability)
+CMD ["node", "minimal-server.js"]
