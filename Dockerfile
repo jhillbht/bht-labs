@@ -3,7 +3,7 @@ FROM node:16-alpine
 WORKDIR /app
 
 # Install system dependencies
-RUN apk add --no-cache procps curl
+RUN apk add --no-cache curl
 
 # Copy package files first for better caching
 COPY package*.json ./
@@ -12,7 +12,7 @@ COPY package*.json ./
 RUN npm install --production
 
 # Create data directory
-RUN mkdir -p /app/data /app/data/knowledge_graph
+RUN mkdir -p /app/data /app/data/documents /app/data/files
 
 # Copy application code
 COPY . .
@@ -29,5 +29,5 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8080/health || exit 1
 
-# Set proper command (use minimal server for reliability)
-CMD ["node", "minimal-server.js"]
+# Set proper command
+CMD ["node", "simple-server.js"]
