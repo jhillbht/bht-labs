@@ -1,4 +1,4 @@
-app = "bht-labs-mcp-server"
+app = "bht-labs-remote-mcp"
 primary_region = "dfw"
 
 [build]
