@@ -7,11 +7,17 @@
     "start": "node server.js",
     "postinstall": "node scripts/install-graphlit.js"
   },
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "dependencies": {
     "@modelcontextprotocol/server": "^1.6.0",
     "@modelcontextprotocol/server-filesystem": "^1.6.0",
     "@modelcontextprotocol/server-knowledge-graph": "^1.6.0",
     "cors": "^2.8.5",
     "express": "^4.18.2"
+  },
+  "optionalDependencies": {
+    "graphlit-mcp-server": "latest"
   }
 }
