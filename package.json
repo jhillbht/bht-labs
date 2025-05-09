@@ -2,23 +2,15 @@
   "name": "bht-labs-mcp-server",
   "version": "1.0.0",
   "description": "MCP Server compatible with Anthropic Claude using SSE transport on Fly.io",
-  "main": "server.js",
+  "main": "simple-server.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node server.js",
-    "minimal": "node minimal-server.js"
+    "start": "node simple-server.js"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.11.1",
-    "@modelcontextprotocol/server": "1.11.1",
-    "@modelcontextprotocol/server-filesystem": "1.11.1",
-    "@modelcontextprotocol/server-knowledge-graph": "1.11.1",
-    "cors": "2.8.5",
     "express": "4.18.2",
-    "fs-extra": "11.1.1",
-    "helmet": "6.2.0",
-    "ps-list": "7.2.0",
-    "tree-kill": "1.2.2"
+    "cors": "2.8.5",
+    "fs-extra": "11.1.1"
   },
   "engines": {
     "node": ">=16.0.0"
