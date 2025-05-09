@@ -14,10 +14,10 @@ This guide provides step-by-step instructions for integrating your deployed BHT 
 
 Your MCP server URL follows this format:
 ```
-https://bht-labs-mcp-server.fly.dev/mcp
+https://bht-labs-remote-mcp.fly.dev/mcp
 ```
 
-Replace `bht-labs-mcp-server.fly.dev` with your actual Fly.io app domain if you used a different name.
+Replace `bht-labs-remote-mcp.fly.dev` with your actual Fly.io app domain if you used a different name.
 
 ### 2. Add the MCP Server to Claude
 
