@@ -1,131 +1,131 @@
 # BHT Labs MCP Server
 
-A Model Context Protocol (MCP) server compatible with Anthropic Claude, optimized for deployment on Fly.io.
+A Model Context Protocol (MCP) server designed for deployment on Fly.io, providing tools and data access capabilities for Anthropic's Claude.
 
 ## Features
 
-- **SSE Transport**: Uses Server-Sent Events (SSE) transport for Fly.io compatibility
-- **File System Access**: Browse and manage files securely
-- **Knowledge Graph**: Store and retrieve structured information
-- **Process Management**: List and manage system processes
-- **Command Execution**: Run commands with security safeguards
+- File system operations through MCP
+- Knowledge graph management
+- Process management and execution
+- Secure command execution
+- Persistent storage for data
+- Server-Sent Events (SSE) transport
 
-## Deployment Instructions
+## Deployment to Fly.io
 
-### Fly.io Deployment
+### Prerequisites
 
-1. Install the Fly.io CLI:
-   ```bash
-   curl -L https://fly.io/install.sh | sh
-   ```
+- [Fly.io CLI](https://fly.io/docs/hands-on/install-flyctl/)
+- Fly.io account (sign up at [fly.io](https://fly.io/))
 
-2. Login to Fly.io:
-   ```bash
-   fly auth login
-   ```
+### Installation Steps
 
-3. Deploy the application:
-   ```bash
-   fly launch
-   ```
-   Or for an existing app:
-   ```bash
-   fly deploy
-   ```
+1. **Install the Fly.io CLI:**
 
-4. Create a persistent volume:
-   ```bash
-   fly volumes create bht_labs_data --size 1 --region dfw
-   ```
-
-5. Set environment variables (if needed):
-   ```bash
-   fly secrets set MCP_AUTH_KEY=your_auth_key
-   ```
-
-6. Monitor your app:
-   ```bash
-   fly status
-   fly logs
-   ```
-
-### Local Development
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/jhillbht/bht-labs.git
-   cd bht-labs
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Run locally:
-   ```bash
-   npm start
-   ```
-
-## Using with Claude Desktop
-
-Add to your `claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "bht-labs": {
-      "sse": {
-        "url": "https://your-app-name.fly.dev/mcp",
-        "messageEndpoint": "https://your-app-name.fly.dev/mcp"
-      }
-    }
-  }
-}
+```bash
+curl -L https://fly.io/install.sh | sh
 ```
 
-If authentication is enabled:
+2. **Login to Fly.io:**
 
-```json
-{
-  "mcpServers": {
-    "bht-labs": {
-      "sse": {
-        "url": "https://your-app-name.fly.dev/mcp",
-        "messageEndpoint": "https://your-app-name.fly.dev/mcp",
-        "headers": {
-          "Authorization": "Bearer your_auth_key"
-        }
-      }
-    }
-  }
-}
+```bash
+fly auth login
 ```
 
-## API Endpoints
+3. **Create a Volume for Persistent Storage:**
 
-- `GET /health` - Health check endpoint
-- `GET /` - Server information
-- `GET /tools` - List all available tools
-- `/mcp` - MCP protocol endpoint for SSE communication
+```bash
+fly volumes create bht_labs_data --region dfw --size 1
+```
+
+4. **Deploy the Application:**
+
+```bash
+fly deploy
+```
+
+5. **Check Status:**
+
+```bash
+fly status
+```
+
+### Optional: Configure Authentication
+
+For additional security, set an authentication key:
+
+```bash
+# Generate a secure random key
+AUTH_KEY=$(openssl rand -hex 32)
+
+# Add the secret to Fly.io
+fly secrets set MCP_AUTH_KEY="$AUTH_KEY"
+```
+
+## Connect to Claude
+
+1. Go to [Claude settings](https://claude.ai/settings/profile)
+2. In the "Integrations" section, click "Add more"
+3. Add your MCP server URL: `https://your-app-name.fly.dev/mcp`
+4. If authentication is enabled, provide the authentication key when prompted
+
+## Available MCP Tools
+
+- `execute_command`: Run shell commands on the server
+- `list_processes`: View running processes
+- `kill_process`: Terminate a process by PID
+- File system operations: read, write, list files, etc.
+- Knowledge graph operations: create, read, update entities and relations
+
+## Monitoring & Management
+
+### View Logs
+
+```bash
+fly logs
+```
+
+### Scale Resources
+
+```bash
+# Upgrade VM resources
+fly scale vm shared-cpu-2x --memory 1024
+
+# Deploy multiple instances
+fly scale count 2
+```
+
+### Create Backups
+
+```bash
+# SSH into the VM
+fly ssh console
+
+# Backup the data directory
+tar -czf /tmp/backup.tar.gz /app/data
+
+# Copy the backup locally
+fly ssh sftp get /tmp/backup.tar.gz ./bht-labs-backup.tar.gz
+```
+
+## Security Considerations
+
+- Set `MCP_AUTH_KEY` for authentication
+- Command blacklist prevents dangerous operations
+- CORS headers manage cross-origin requests
+- Resource constraints prevent abuse
 
 ## Environment Variables
 
-- `PORT` - Server port (default: 8080)
-- `MCP_AUTH_KEY` - Optional authentication key
-- `MCP_DATA_DIR` - Data directory path (default: './data')
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PORT` | Server port | 8080 |
+| `MCP_AUTH_KEY` | Authentication key | Not set (no auth) |
+| `MCP_DATA_DIR` | Data directory path | /app/data |
 
-## Available Tools
+## Troubleshooting
 
-- `file_*` - Filesystem operations
-- `knowledge_graph_*` - Knowledge graph operations
-- `execute_command` - Execute terminal commands
-- `list_processes` - List system processes
-- `kill_process` - Terminate a process
-
-## Security
-
-- Command blacklisting
-- Authentication support
-- Volume isolation
-- Process sandboxing
+- **Connection Issues**: Check `fly status` and `fly ips list`
+- **Authentication Errors**: Verify auth key is set correctly
+- **Persistence Problems**: Ensure volume is mounted with `fly volumes list`
+- **Resource Constraints**: Monitor with `fly metrics`
