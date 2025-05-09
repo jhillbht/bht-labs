@@ -21,7 +21,7 @@ services:
     value: a2959835-fd03-4653-9395-ac921421c93f
     scope: RUN_AND_BUILD_TIME
   - key: GRAPHLIT_JWT_SECRET
-    value: RizYP09Mn+tsnXUSLCrX+6g4nmVhF/tRK5Wch0JesGg=
+    value: "RizYP09Mn+tsnXUSLCrX+6g4nmVhF/tRK5Wch0JesGg="
     scope: RUN_AND_BUILD_TIME
   routes:
   - path: /
