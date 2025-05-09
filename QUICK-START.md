@@ -34,7 +34,7 @@ fly auth login
 ### 3. Deploy in One Command
 
 ```bash
-fly launch --name bht-labs-mcp-server --region dfw --no-deploy && \
+fly launch --name bht-labs-remote-mcp --region dfw --no-deploy && \
 fly volumes create bht_labs_data --region dfw --size 1 && \
 fly deploy
 ```
@@ -43,7 +43,7 @@ fly deploy
 
 1. Go to [Claude settings](https://claude.ai/settings/profile)
 2. In the "Integrations" section, click "Add more"
-3. Add your MCP server URL: `https://bht-labs-mcp-server.fly.dev/mcp`
+3. Add your MCP server URL: `https://bht-labs-remote-mcp.fly.dev/mcp`
 
 ## What's in the Box?
 
